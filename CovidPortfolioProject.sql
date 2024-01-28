@@ -10,7 +10,7 @@ use PortfolioProject;
 Select *
 From PortfolioProject..CovidDeath
 Where continent is not null 
-order by 3,4
+order by 3,4;
 
 
 -- Select Data that we are going to be starting with
@@ -20,9 +20,10 @@ From PortfolioProject..CovidDeath
 Where continent is not null 
 order by 1,2
 
-
--- Total Cases vs Total Deaths
--- Shows likelihood of dying if you contract covid in your country
+---------------------------------------------------------------------------------------
+-- Total Cases vs Total Deaths -------------------------------------------------------
+-- Shows likelihood of dying if you contract covid in your country --------------------
+----------------------------------------------------------------------------------------
 
 Select Location, date, total_cases,total_deaths, (total_deaths/total_cases)*100 as DeathPercentage
 From PortfolioProject..CovidDeath
@@ -30,13 +31,26 @@ Where location like '%states%'
 and continent is not null 
 order by 1,2
 
+---------------------------------------------------------------------------------------------------
+---Total Number of Deaths per million people for each location-------------------------------------
+---------------------------------------------------------------------------------------------------
 
--- Total Cases vs Population
--- Shows what percentage of population infected with Covid
+SELECT 
+    location,
+    SUM(convert(int,total_deaths)) / (SUM(population) / 1000000) AS deaths_per_million
+FROM 
+    PortfolioProject..CovidDeath
+WHERE 
+     continent IS NOT NULL
+GROUP BY 
+    location;
 
+------------------------------------------------------------------------------------------
+-- Total Cases vs Population--------------------------------------------------------------
+-- Shows what percentage of population infected with Covid--------------------------------
+------------------------------------------------------------------------------------------
 Select Location, date, Population, total_cases,  (total_cases/population)*100 as PercentPopulationInfected
 From PortfolioProject..CovidDeath
---Where location like '%states%'
 order by 1,2
 
 
@@ -151,7 +165,59 @@ From PortfolioProject..CovidDeath dea
 Join PortfolioProject..CovidVaccination vac
 	On dea.location = vac.location
 	and dea.date = vac.date
-where dea.continent is not null 
+where dea.continent is not null ;
+
+
+CREATE VIEW TOTAL_DEATH_COUNT
+AS
+Select continent, MAX(cast(Total_deaths as int)) as TotalDeathCount
+From PortfolioProject..CovidDeath
+Where continent is not null 
+Group by continent
+;
+
+CREATE VIEW Death_Count_by_population
+AS
+Select Location, MAX(cast(Total_deaths as int)) as TotalDeathCount
+From PortfolioProject..CovidDeath
+--Where location like '%states%'
+Where continent is not null 
+Group by Location
+;
+
+CREATE VIEW deaths_per_million
+AS 
+SELECT 
+    location,
+    SUM(convert(int,total_deaths)) / (SUM(population) / 1000000) AS deaths_per_million
+FROM 
+    PortfolioProject..CovidDeath
+WHERE 
+     continent IS NOT NULL
+GROUP BY 
+    location;
+
+
+CREATE VIEW PercentPopulationInfected
+AS 
+Select Location, Population, MAX(total_cases) as HighestInfectionCount,  ROUND(Max((total_cases/population))*100,2) as PercentPopulationInfected
+From PortfolioProject..CovidDeath
+--Where location like '%states%'
+Group by Location, Population;
+
+CREATE VIEW TotalDeathCount
+AS
+Select Location, MAX(cast(Total_deaths as int)) as TotalDeathCount
+From PortfolioProject..CovidDeath
+Where continent is not null 
+Group by Location;
+
+
+
+
+
+
+
 
 
 select * from PercentPopulationVaccinated;
